@@ -1,0 +1,24 @@
+{
+  "name": "simple-request",
+  "version": "1.0.0",
+  "description": "Executes a simple RESTful request over an MQTT transport.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mqtt",
+    "expressify"
+  ],
+  "author": "Halim Qarroum <hqm.post@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "aws-iot-device-sdk": "^2.2.1",
+    "chalk": "^2.4.1",
+    "commander": "^2.15.1",
+    "moment": "^2.22.1",
+    "osx-temperature-sensor": "^1.0.1",
+    "pretty-bytes": "^4.0.2",
+    "systeminformation": "^3.40.0"
+  }
+}

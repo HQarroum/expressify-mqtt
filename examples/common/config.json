@@ -1,0 +1,6 @@
+{
+  "host": "a321muvj58bm4e.iot.eu-west-1.amazonaws.com",
+  "keyPath": "../common/certs/private.pem.key",
+  "certPath": "../common/certs/certificate.pem.crt",
+  "caPath": "../common/certs/root-ca.pem"
+}
