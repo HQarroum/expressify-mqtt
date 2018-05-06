@@ -17,6 +17,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 - [Installation](#installation)
 - [Features](#features)
 - [Usage](#usage)
+- [Examples](#examples)
 - [See also](#see-also)
 
 ## Install
@@ -42,13 +43,12 @@ In order to use `expressify-mqtt`, you need to create an instance of the strateg
 When initializing the `expressify-mqtt` strategy, you need to pass it a supported MQTT back-end, as well as a *topic mountpoint* indicating the base topic which the strategy will use to create its topic architecture.
 
 ```js
+// Injecting the `mqtt.js` library.
 const mqtt = require('mqtt');
 
+// Creating the client instance.
 const client = new Expressify.Client({
-  strategy: new MqttStrategy({
-    mqtt: mqtt,
-    topic: 'foo'
-  })
+  strategy: new MqttStrategy({ mqtt, topic: 'foo' })
 });
 ```
 
@@ -57,18 +57,23 @@ const client = new Expressify.Client({
 ### Creating a server
 
 ```js
+// Injecting the `mqtt.js` library.
+const mqtt = require('mqtt');
+
+// Creating the server instance.
 const server = new Expressify.Server({
-  strategy: new MqttStrategy({
-    mqtt: mqttClient,
-    topic: 'system'
-  })
+  strategy: new MqttStrategy({ mqtt, topic: 'foo' })
 });
 
 // Listening for incoming requests.
 server.listen().then(() => {
-  console.log(`[+] The server is listening for incoming requests on mount point '${server.strategy.opts.topic}' !`);
+  console.log(`[+] The server is listening on mount point '${server.strategy.opts.topic}' !`);
 });
 ```
+
+## Examples
+
+Different functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory. Every examples comes with a `README.md` file detailing the use-case and the usage of the example in question.
 
 ## See also
 
