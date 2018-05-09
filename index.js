@@ -120,6 +120,12 @@ const register = function (resource) {
   return (this.subscribers[resource].count++);
 };
 
+/**
+ * Removes the subscription(s) associated with
+ * the given `resource`.
+ * @param {*} resource the resource to remove
+ * from the subscriptions.
+ */
 const removeSubscription = function (resource) {
   // Removing the subscription timer.
   this.eventCache.remove(resource);
