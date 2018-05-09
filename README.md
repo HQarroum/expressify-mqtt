@@ -14,7 +14,7 @@ Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 
 ## Table of contents
 
-- [Installation](#installation)
+- [Installation](#install)
 - [Features](#features)
 - [Usage](#usage)
 - [Examples](#examples)
