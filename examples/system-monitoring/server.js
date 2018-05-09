@@ -15,11 +15,6 @@ let intervals = [];
 let connected = false;
 
 /**
- * The memory store.
- */
-const store = {};
-
-/**
  * The domains we are notifying the client about.
  */
 const domains = [

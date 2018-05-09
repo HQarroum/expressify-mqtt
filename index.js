@@ -98,12 +98,8 @@ const publish = function (topic, payload) {
  * the subscription to re-arm.
  */
 const reArm = function (resource) {
-  console.log('rearm', resource);
   this.eventCache.put(resource, true, {
-    callback: () => {
-      console.log('event cache clear', resource);
-      removeSubscription.call(this, resource);
-    }
+    callback: () => removeSubscription.call(this, resource)
   });
 };
 
@@ -125,7 +121,6 @@ const register = function (resource) {
 };
 
 const removeSubscription = function (resource) {
-  console.log('removeSubscription', resource);
   // Removing the subscription timer.
   this.eventCache.remove(resource);
   // Removing the subscription from memory.
@@ -141,7 +136,6 @@ const removeSubscription = function (resource) {
  */
 const unregister = function (resource) {
   if (!this.subscribers[resource]) return (false);
-  console.log('unregister', resource, 'reference count is', this.subscribers[resource].count - 1);
   // Dereferencing a subscriber.
   if (!(--this.subscribers[resource].count)) {
     // If the reference counter reached zero, we remove the
@@ -149,6 +143,20 @@ const unregister = function (resource) {
     removeSubscription.call(this, resource);
   }
   return (true);
+};
+
+/**
+ * Called back on a `ping` request.
+ * @param {*} req the expressify request.
+ * @param {*} res the expressify response.
+ */
+const onPing = function (req, res) {
+  // Re-arming timers associated with the given resources.
+  if (Array.isArray(req.payload.resources)) {
+    req.payload.resources.forEach((r) => reArm.call(this, r));
+  }
+  // Replying a succeeded operation.
+  res.send(200);
 };
 
 /**
@@ -175,6 +183,7 @@ class Strategy extends EventEmitter {
     this.subscribeAsync = subscribe.bind(this);
     this.unsubscribeAsync = unsubscribe.bind(this);
     this.publishAsync = publish.bind(this);
+    this.on('ping', (o) => onPing.call(this, o.req, o.res));
     this.opts.mqtt.on('message', this.onMessage);
   }
 
@@ -221,27 +230,12 @@ class Strategy extends EventEmitter {
    */
   unsubscribe(req, res) {
     const topic = req.resource;
-    console.log('unsubscribe', topic);
     // Removing the subscription if it exists.
     if (!unregister.call(this, topic)) {
       return res.send(404, { error: 'No such subscription' });
     }
     // Replying a succeeded operation.
     res.send({ topic });
-  }
-
-  /**
-   * Called back on a `ping` request.
-   * @param {*} req the expressify request.
-   * @param {*} res the expressify response.
-   */
-  ping(req, res) {
-    // Re-arming timers associated with the given resources.
-    if (Array.isArray(req.payload.resources)) {
-      req.payload.resources.forEach((r) => reArm.call(this, r));
-    }
-    // Replying a succeeded operation.
-    res.send(200);
   }
 
   /**
