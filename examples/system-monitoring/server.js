@@ -131,7 +131,3 @@ process.on('SIGINT', () => {
   // Marking the connection as closed.
   connected = false;
 });
-
-exports.handler = () => {
-  console.log('Executed');
-};

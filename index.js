@@ -2,25 +2,40 @@ const EventEmitter = require('events').EventEmitter;
 const Cache = require('timed-cache');
 
 /**
+ * Normalize a topic to abvoid double trailing slashes.
+ */
+const normalize = (topic) => {
+  // Removing trailing slash.
+  if (topic.charAt(topic.length - 1) === '/') {
+    topic = topic.substr(topic.length - 2)
+  }
+  // Removing leading slash.
+  if (topic.charAt(0) === '/') {
+    topic = topic.substr(1, topic.length - 1);
+  }
+  return (topic);
+};
+
+/**
  * @return the topic associated with the server listening topic, based on
  * the given topic mount point.
  * @param {*} topic the topic mount point.
  */
-const getPlaceholder = (topic) => (`${topic}/+/request`);
+const getPlaceholder = (topic) => (`${normalize(topic)}/+/request`);
 
 /**
  * @return the topic associated with the given payload type.
  * @param {*} topic the topic mount point.
  * @param {*} object the expressify request or response
- * payload. 
+ * payload.
  */
-const getTopic = (topic, object, type) => (`${topic}/${object.transactionId}/${type || object.type}`);
+const getTopic = (topic, object, type) => (`${normalize(topic)}/${object.transactionId}/${type || object.type}`);
 
 /**
  * @return the topic associated with events associated with the given `resource`.
  * @param {*} resource the resource associated with the event topic.
  */
-const getEventTopic = (topic, resource) => (`${topic}/${resource}/events`);
+const getEventTopic = (topic, resource) => (`${normalize(topic)}/${normalize(resource)}/events`);
 
 /**
  * Throws an exception if the given `opts` object
@@ -99,7 +114,12 @@ const publish = function (topic, payload) {
  */
 const reArm = function (resource) {
   this.eventCache.put(resource, true, {
-    callback: () => removeSubscription.call(this, resource)
+    callback: () => {
+      // Removing all subscriptions for the `resource`.
+      removeSubscription.call(this, resource);
+      // Notifying the unsubscription.
+      this.emit('subscription.removed', { resource });
+    }
   });
 };
 
@@ -152,6 +172,17 @@ const unregister = function (resource) {
 };
 
 /**
+ * @return the number of subscribers associated with
+ * the given `resource`.
+ * @param resource the resource to find the number of
+ * subscribers for.
+ */
+const subscribersOf = function (resource) {
+  if (!this.subscribers[resource]) return (0);
+  return (this.subscribers[resource].count);
+};
+
+/**
  * Called back on a `ping` request.
  * @param {*} req the expressify request.
  * @param {*} res the expressify response.
@@ -163,6 +194,48 @@ const onPing = function (req, res) {
   }
   // Replying a succeeded operation.
   res.send(200);
+};
+
+/**
+ * Sends the given `request` to the current topic.
+ * @param {*} request the request to send.
+ */
+const query = function (request) {
+  const destination = getTopic(this.opts.topic, request);
+  const source      = getTopic(this.opts.topic, request, 'response');
+
+  // Subscribing to the associated response topic.
+  return this.subscribeAsync(source)
+     // Unsubscribing from the response topic after `eventTimeout`.
+    .then(() => {
+      this.cache.put(source, request, {
+        callback: (key) => this.unsubscribeAsync(key)
+      });
+    })
+    // Publishing the `request` object on the `destination` topic.
+    .then(() => this.publishAsync(destination, request));
+};
+
+/**
+ * Sends the given `response` to the initiating
+ * client.
+ * @param {*} response the response to send.
+ */
+const reply = function (response) {
+  return (this.publishAsync(getTopic(this.opts.topic, response), response));
+};
+
+/**
+ * Notifies an array of subscribers currently observing
+ * the resource associated with the given `event`.
+ * @param {*} event the event to dispatch.
+ */
+const notify = function (event) {
+  // Publishing the event only if there are subscribers associated with the event's resource.
+  return (subscribersOf.call(this, event.resource) > 0 ?
+    this.publishAsync(getEventTopic(this.opts.topic, event.resource), event) :
+    Promise.resolve()
+  );
 };
 
 /**
@@ -198,20 +271,14 @@ class Strategy extends EventEmitter {
    * @param {*} object the expressify payload to publish.
    */
   publish(object) {
-    let p_ = Promise.resolve();
-    const destination = object.type === 'event' ?
-      getEventTopic(this.opts.topic, object.resource) :
-      getTopic(this.opts.topic, object);
     if (object.type === 'request') {
-      // In the context of a `request` message, we would like to
-      // additionally subscribe to the associated response channel.
-      const source = getTopic(this.opts.topic, object, 'response');
-      p_ = p_.then(() => this.subscribeAsync(source));
-      this.cache.put(source, object, {
-        callback: (key) => this.unsubscribeAsync(key)
-      });
+      return (query.call(this, object));
+    } else if (object.type === 'response') {
+      return (reply.call(this, object));
+    } else if (object.type === 'event') {
+      return (notify.call(this, object));
     }
-    return (p_.then(() => this.publishAsync(destination, object)));
+    return (Promise.reject('Invalid request type'));
   }
 
   /**
@@ -224,6 +291,8 @@ class Strategy extends EventEmitter {
     const topic = req.resource;
     // Registering the subscription.
     register.call(this, topic);
+    // Notifying the subscription.
+    this.emit('subscription.added', req);
     // Replying a succeeded operation.
     res.send({ topic });
   }
@@ -240,6 +309,8 @@ class Strategy extends EventEmitter {
     if (!unregister.call(this, topic)) {
       return res.send(404, { error: 'No such subscription' });
     }
+    // Notifying the unsubscription.
+    this.emit('subscription.removed', req);
     // Replying a succeeded operation.
     res.send({ topic });
   }
