@@ -1,5 +1,6 @@
-const EventEmitter = require('events').EventEmitter;
-const Cache = require('timed-cache');
+const EventEmitter     = require('events').EventEmitter;
+const Cache            = require('timed-cache');
+const MessageProcessor = require('./lib/message-ordering');
 
 /**
  * Normalize a topic to abvoid double trailing slashes.
@@ -48,24 +49,42 @@ const enforceOptions = (opts) => {
 };
 
 /**
+ * Treats received messages from either the `mqtt` library
+ * or the message processor.
+ * @param {*} topic the topic on which the message has been published.
+ * @param {*} message the JSON payload associated with the received message.
+ */
+const emitMessage = function (topic, message) {
+  const request = this.cache.get(topic);
+
+  if (request && message.type === 'response') {
+    if (request.method === 'subscribe' && message.code === 200) {
+      this.subscribeAsync(getEventTopic(this.opts.topic, message.payload.topic));
+    }
+    // If we received a response to a previous request,
+    // we can unsubscribe from the response topic.
+    this.unsubscribeAsync(getTopic(this.opts.topic, message));
+    this.cache.remove(topic);
+  }
+  this.emit('message', { data: message });
+};
+
+/**
  * Called back when a new inbound message has
  * been received.
+ * @param {*} topic the topic on which the message has been published.
+ * @param {*} payload the payload associated with the received message.
  */
 const onMessage = function (topic, payload) {
   try {
     const message = JSON.parse(payload);
-    const request = this.cache.get(topic);
 
-    if (request && message.type === 'response') {
-      if (request.method === 'subscribe' && message.code === 200) {
-        this.subscribeAsync(getEventTopic(this.opts.topic, message.payload.topic));
-      }
-      // If we received a response to a previous request,
-      // we can unsubscribe from the response topic.
-      this.unsubscribeAsync(getTopic(this.opts.topic, message));
-      this.cache.remove(topic);
+    if (message.headers.sequence) {
+      // Reordering stateful messages.
+      return (this.processor.push({ topic, message }));
     }
-    this.emit('message', { data: message });
+    // Forwarding the message to the upper layer.
+    return (this.emitMessage(topic, message));
   } catch (e) {}
 };
 
@@ -133,7 +152,14 @@ const register = function (resource) {
   reArm.call(this, resource);
   // Creating subscription for the resource.
   if (!this.subscribers[resource]) {
-    return (this.subscribers[resource] = { count: 1, connection: this });
+    return (this.subscribers[resource] = {
+      // Number of subscribers for the `resource`.
+      count: 1,
+      // The current sequence number.
+      sequence: 0,
+      // A reference to this strategy.
+      connection: this
+    });
   }
   // Incrementing the reference counter on the number of
   // subscribers for `resource`.
@@ -169,17 +195,6 @@ const unregister = function (resource) {
     removeSubscription.call(this, resource);
   }
   return (true);
-};
-
-/**
- * @return the number of subscribers associated with
- * the given `resource`.
- * @param resource the resource to find the number of
- * subscribers for.
- */
-const subscribersOf = function (resource) {
-  if (!this.subscribers[resource]) return (0);
-  return (this.subscribers[resource].count);
 };
 
 /**
@@ -231,11 +246,18 @@ const reply = function (response) {
  * @param {*} event the event to dispatch.
  */
 const notify = function (event) {
-  // Publishing the event only if there are subscribers associated with the event's resource.
-  return (subscribersOf.call(this, event.resource) > 0 ?
-    this.publishAsync(getEventTopic(this.opts.topic, event.resource), event) :
-    Promise.resolve()
-  );
+  const subscribers = this.subscribers[event.resource];
+
+  if (!subscribers || !subscribers.count) {
+    // There are no subscribers for the given `resource`.
+    return (Promise.resolve());
+  }
+  // If the given event needs to be ordered we increment its sequence number.
+  if (event.opts.ordered) {
+    event.headers.sequence = subscribers.sequence++;
+  }
+  // Publishing the event to the appropriate `topic`.
+  return (this.publishAsync(getEventTopic(this.opts.topic, event.resource), event));
 };
 
 /**
@@ -258,12 +280,18 @@ class Strategy extends EventEmitter {
     this.cache = new Cache({ defaultTtl: this.timeout });
     this.eventTimeout = this.opts.eventTimeout || (60 * 1000);
     this.eventCache = new Cache({ defaultTtl: this.eventTimeout });
+    this.awaitTimeout = this.opts.awaitTimeout || (3 * 1000);
+    this.processor = new MessageProcessor({ awaitTimeout: this.awaitTimeout });
     this.onMessage = onMessage.bind(this);
+    this.emitMessage = emitMessage.bind(this);
     this.subscribeAsync = subscribe.bind(this);
     this.unsubscribeAsync = unsubscribe.bind(this);
     this.publishAsync = publish.bind(this);
     this.on('ping', (o) => onPing.call(this, o.req, o.res));
+    // Subscribing to inbound MQTT messages.
     this.opts.mqtt.on('message', this.onMessage);
+    // Subscribing to reordered messages.
+    this.processor.on('message', this.emitMessage);
   }
 
   /**
