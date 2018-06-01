@@ -78,4 +78,5 @@ Different functional examples involving the `expressify-mqtt` strategy are avail
 ## See also
 
  - The [Expressify](https://github.com/HQarroum/expressify) framework.
+ - The [expressify-ipc](https://github.com/HQarroum/expressify-ipc) strategy supporting local sockets.
  - The [expressify-pm](https://github.com/HQarroum/expressify-pm) strategy supporting [`.postMessage`](https://developer.mozilla.org/fr/docs/Web/API/Window/postMessage).
