@@ -5,8 +5,7 @@
 # expressify-mqtt
 > An Expressify strategy enabling RESTful application over an MQTT(S) transport.
 
-[![Build Status](https://travis-ci.org/HQarroum/expressify-mqtt.svg?branch=master)](https://travis-ci.org/HQarroum/expressify-mqtt)
-[![Code Climate](https://codeclimate.com/github/HQarroum/expressify-mqtt/badges/gpa.svg)](https://codeclimate.com/github/HQarroum/expressify-mqtt)
+[![CodeFactor](https://www.codefactor.io/repository/github/hqarroum/expressify-mqtt/badge)](https://www.codefactor.io/repository/github/hqarroum/expressify-mqtt)
 
 Current version: **1.0.0**
 
@@ -56,6 +55,8 @@ const client = new Expressify.Client({
 
 ### Creating a server
 
+The below example shows you how to create an instance of an Expressify server using the `mqtt` strategy.
+
 ```js
 // Injecting the `mqtt.js` library.
 const mqtt = require('mqtt');
@@ -73,7 +74,7 @@ server.listen().then(() => {
 
 ## Examples
 
-Different functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory. Every examples comes with a `README.md` file detailing the use-case and the usage of the example in question.
+Different functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory.
 
 ## See also
 
