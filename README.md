@@ -78,12 +78,22 @@ server.listen().then(() => {
 });
 ```
 
+## Connecting the back-end
+
+In order for an `expressify-mqtt` client or server to be able to start subscribing or publishing on MQTT topics using the `backend` instance, it should be configured and connected before using expressify. See the [examples](./examples) available in this repository to see more in details how to connect the back-ends before using either the client or the server.
+
+### The configuration object
+
+As you will see it in the [examples](./examples), The `MQTT.js` and the `AWS IoT SDK` requires a configuration object to be passed in order to specify the configuration properties (server, certificates, connection parameters, etc.) to use while connecting to an MQTT server.
+
+An example of such a configuration object is available [here](./examples/common/config.json), replace the placeholders between diamonds with the correct values. The referenced certificate paths (`keyPath`, `certPath` and `caPath`) should be placed in the `common` directory for the examples to properly work. For more information on the values you can put in the `config.json` file, please read the associated documentation on the [AWS IoT SDK for Javascript](https://github.com/aws/aws-iot-device-sdk-js#awsiotdeviceoptions).
+
 ## Examples
 
 Two functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory :
 
  - [Remote storage](https://github.com/HQarroum/expressify-mqtt/tree/master/examples/remote-storage) - Demonstrates how to use `expressify-mqtt` to expose a REST interface on the server which can store in memory a set of key-value pairs, and on the client on how to query this service remotely over MQTT.
- - [system-monitoring](https://github.com/HQarroum/expressify-mqtt/tree/master/examples/system-monitoring) - Shows you how to use `expressify-mqtt` to expose system metrics on the server and to display them to the user on the client.
+ - [System monitoring](https://github.com/HQarroum/expressify-mqtt/tree/master/examples/system-monitoring) - Shows you how to use `expressify-mqtt` to expose system metrics on the server and to display them to the user on the client.
 
 ## See also
 
