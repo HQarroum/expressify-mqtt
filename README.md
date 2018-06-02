@@ -54,7 +54,7 @@ const client = new Expressify.Client({
 });
 ```
 
-> Note that given the used MQTT service, there might be limitations on the number of forward slashes you can use. For example, on AWS IoT the maximum amount of forward slashes is 7 [as of today](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#iot-protocol-limits). Also, have a read on how the [query-response pattern] over MQTT works in `expressify-mqtt` to understand the maximum number of forward slashes you can use on a topic mountpoint.
+> Note that given the used MQTT service, there might be limitations on the number of forward slashes you can use. For example, on AWS IoT the maximum amount of forward slashes is 7 [as of today](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#iot-protocol-limits). Also, have a read on how the [query-response pattern](#query-response-pattern) over MQTT works in `expressify-mqtt` to understand the maximum number of forward slashes you can use on a topic mountpoint.
 
 ### Creating a server
 
@@ -86,9 +86,37 @@ In order for an `expressify-mqtt` client or server to be able to start subscribi
 
 As you will see it in the [examples](./examples), The `MQTT.js` and the `AWS IoT SDK` requires a configuration object to be passed in order to specify the configuration properties (server, certificates, connection parameters, etc.) to use while connecting to an MQTT server.
 
-An example of such a configuration object is available [here](./examples/common/config.json), replace the placeholders between diamonds with the correct values. The referenced certificate paths (`keyPath`, `certPath` and `caPath`) should be placed in the [`certs`](./examples/common/certs) directory for the examples to properly work.
+An example of such a configuration object is available [here](./examples/common/config.json), replace the placeholders between diamonds with the correct values. The referenced certificate paths (`keyPath`, `certPath` and `caPath`) should be placed in the `common/certs` directory for the examples to properly work.
 
 For more information on the values you can put in the `config.json` file, please read the associated documentation on the [AWS IoT SDK for Javascript](https://github.com/aws/aws-iot-device-sdk-js#awsiotdeviceoptions).
+
+## Implementation details
+
+In this section will be detailed implementation details about the inner workings of the `expressify-mqtt` module.
+
+### Query-Response pattern
+
+To enable a stateless query-response model over MQTT, this module is based on the establishment of a topic nomenclature which is optimized in terms performance and costs.
+
+When issuing a request or a response, `expressify-mqtt` builds its query and response topics on top of the *topic mountpoint* documented in the previous sections and uses it as a mounting point for the rest of the topic schema.
+
+#### Anatomy of a transaction
+
+When an `expressify-mqtt` client queries a remote server, it will transmit the standard expressify query payload over the following topic :
+
+```json
+${"topic-mount-point"}/${"query-transaction-id"}/request
+```
+
+Where `topic-mount-point` is the topic mountpoint given by the user of the strategy when instantiating it,`query-transaction-id` is a UUID v4 generated per query, and `request` is a string literal indicating the type of the transaction.
+
+Before sending this request, the expressify client will subscribe to the following topic (the same nomenclature as for the request is used for variable names) :
+
+```json
+${"topic-mount-point"}/${"query-transaction-id"}/response
+```
+
+When the server responds to the request, it will send it on the above MQTT topic using the same transaction identifier as for the request.
 
 ## Examples
 
