@@ -135,13 +135,11 @@ ${"topic-mount-point"}/${"resource-name"}/events
 By default, the `expressify-topic` when publishing a message on an MQTT broker will do so using a `QoS` of 1 to avoid lost messages. This can be overriden by the user of the module when instanciating the strategy :
 
 ```js
-// Using a `QoS` of zero.
+// Using a `QoS` of `0`.
 new MqttStrategy({
   mqtt: backend,
   topic: 'my/topic',
-  mqttOpts: {
-    qos: 0
-  }
+  mqttOpts: { qos: 0 }
 })
 ```
 
