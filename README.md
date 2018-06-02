@@ -153,6 +153,8 @@ Below is an example of how to send events in an ordered manner from a server ins
 server.publish(`/my/resource`, { foo: 'bar' }, { ordered: true });
 ```
 
+> A sequence number will be sent by the server on each `.publish()` to allow the client to re-order the messages. Note that the client will wait for a short period of time to receive an expected message after having received subsequent messages. Once the timeout has been reached, the message is considered lost, and `expressify-mqtt` will continue ordering subsequent messages to avoid the client to be trapped into a 'hanged' situation.
+
 ## Examples
 
 Two functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory :
