@@ -1,4 +1,4 @@
-const Expressify = require('../../../expressify');
+const Expressify = require('expressify-js');
 const MqttStrategy = require('../../');
 const mqtt = require('aws-iot-device-sdk');
 const opts = require('../common/config');

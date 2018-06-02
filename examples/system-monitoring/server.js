@@ -1,5 +1,5 @@
-const Expressify = require('expressify');
-const MqttStrategy = require('expressify-mqtt');
+const Expressify = require('expressify-js');
+const MqttStrategy = require('../../');
 const mqtt = require('aws-iot-device-sdk');
 const opts = require('../common/config');
 const system = require('./lib');
@@ -111,7 +111,7 @@ mqttClient.on('connect', () => {
   // changes in the local system model.
   intervals = domains.map((d) => setInterval(() => {
     system[d].get().then((r) => server.publish(`/system/${d}`, r));
-  }, 2 * 1000));
+  }, 5 * 1000));
 });
 
 /**

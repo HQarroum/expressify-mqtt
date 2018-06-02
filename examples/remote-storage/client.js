@@ -1,4 +1,4 @@
-const Expressify = require('../../../expressify');
+const Expressify = require('expressify-js');
 const MqttStrategy = require('../../');
 const iot = require('aws-iot-device-sdk');
 const opts = require('../common/config');
@@ -64,7 +64,7 @@ mqtt.on('connect', () => {
   console.log(`[+] Connected to AWS IoT, sending requests ...`);
   // Issuing the requests against the remote expressify server.
   sendRequests().then(() => {
-    console.log('[+] Received 3/3 responses from the server !');
+    console.log('[+] Received 3/3 responses from the server, closing the connection ...');
     mqtt.end();
   }).catch(console.error);
 });
