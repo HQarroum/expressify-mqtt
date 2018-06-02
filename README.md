@@ -118,6 +118,41 @@ ${"topic-mount-point"}/${"query-transaction-id"}/response
 
 When the server responds to the request, it will send it on the above MQTT topic using the same transaction identifier as for the request.
 
+#### Anatomy of event notifications
+
+Since Expressify offers the ability for clients to *observe* a remote resource on the server, and be notified whenever this resource has been modified, the `expressify-mqtt` strategy bases the event notification flow upon the following topic model.
+
+When a client wishes to subscribe to a remote resource, it sends a request (as for a regular request) to the server indicating the resource it would like to subscribe to.
+
+Once acknowledge by the server, subsequent updates and notifications associated with the observed resource will be sent by the server on the below topic.
+
+```json
+${"topic-mount-point"}/${"resource-name"}/events
+```
+
+## Message ordering
+
+By default, the `expressify-topic` when publishing a message on an MQTT broker will do so using a `QoS` of 1 to avoid lost messages. This can be overriden by the user of the module when instanciating the strategy :
+
+```js
+// Using a `QoS` of zero.
+new MqttStrategy({
+  mqtt: backend,
+  topic: 'my/topic',
+  mqttOpts: {
+    qos: 0
+  }
+})
+```
+
+Unless the used MQTT broker supports `QoS 2`, there is a chance that your messages will not arrive in the same order they have been sent initially by the client. Since some applications might require message ordering to be guaranteed, it is possible to activate this feature on `expressify-mqtt` for events, but not for query-responses since those are supposed to be stateless.
+
+Below is an example of how to send events in an ordered manner from a server instance when notifying the client about a change on one of the resource it exposes.
+
+```js
+server.publish(`/my/resource`, { foo: 'bar' }, { ordered: true });
+```
+
 ## Examples
 
 Two functional examples involving the `expressify-mqtt` strategy are available in the [examples](./examples) directory :
