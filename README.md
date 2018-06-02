@@ -86,7 +86,9 @@ In order for an `expressify-mqtt` client or server to be able to start subscribi
 
 As you will see it in the [examples](./examples), The `MQTT.js` and the `AWS IoT SDK` requires a configuration object to be passed in order to specify the configuration properties (server, certificates, connection parameters, etc.) to use while connecting to an MQTT server.
 
-An example of such a configuration object is available [here](./examples/common/config.json), replace the placeholders between diamonds with the correct values. The referenced certificate paths (`keyPath`, `certPath` and `caPath`) should be placed in the `common` directory for the examples to properly work. For more information on the values you can put in the `config.json` file, please read the associated documentation on the [AWS IoT SDK for Javascript](https://github.com/aws/aws-iot-device-sdk-js#awsiotdeviceoptions).
+An example of such a configuration object is available [here](./examples/common/config.json), replace the placeholders between diamonds with the correct values. The referenced certificate paths (`keyPath`, `certPath` and `caPath`) should be placed in the [`certs`](./examples/common/certs) directory for the examples to properly work.
+
+For more information on the values you can put in the `config.json` file, please read the associated documentation on the [AWS IoT SDK for Javascript](https://github.com/aws/aws-iot-device-sdk-js#awsiotdeviceoptions).
 
 ## Examples
 
