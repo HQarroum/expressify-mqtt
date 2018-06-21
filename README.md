@@ -7,7 +7,7 @@
 
 [![CodeFactor](https://www.codefactor.io/repository/github/hqarroum/expressify-mqtt/badge)](https://www.codefactor.io/repository/github/hqarroum/expressify-mqtt)
 
-Current version: **1.0.2**
+Current version: **1.0.3**
 
 Lead Maintainer: [Halim Qarroum](mailto:hqm.post@gmail.com)
 

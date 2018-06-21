@@ -1,6 +1,6 @@
 {
   "name": "expressify-mqtt",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Transport strategy for Expressify REST mechanisms over MQTT.",
   "main": "index.js",
   "directories": {

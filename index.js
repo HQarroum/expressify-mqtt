@@ -3,12 +3,13 @@ const Cache            = require('timed-cache');
 const MessageProcessor = require('./lib/message-ordering');
 
 /**
- * Normalize a topic to abvoid double trailing slashes.
+ * @return a normalized representation of a topic
+ * avoiding double trailing slashes.
  */
 const normalize = (topic) => {
   // Removing trailing slash.
   if (topic.charAt(topic.length - 1) === '/') {
-    topic = topic.substr(topic.length - 2)
+    topic = topic.substr(topic.length - 2);
   }
   // Removing leading slash.
   if (topic.charAt(0) === '/') {
@@ -64,6 +65,7 @@ const emitMessage = function (topic, message) {
     // If we received a response to a previous request,
     // we can unsubscribe from the response topic.
     this.unsubscribeAsync(getTopic(this.opts.topic, message));
+    // Removing the `topic` from the cache.
     this.cache.remove(topic);
   }
   this.emit('message', { data: message });
@@ -232,8 +234,7 @@ const query = function (request) {
 };
 
 /**
- * Sends the given `response` to the initiating
- * client.
+ * Sends the given `response` to the initiating client.
  * @param {*} response the response to send.
  */
 const reply = function (response) {
@@ -278,7 +279,7 @@ class Strategy extends EventEmitter {
     if (!this.opts.mqttOpts) this.opts.mqttOpts = { qos: 1 };
     this.timeout = this.opts.timeout || (10 * 1000);
     this.cache = new Cache({ defaultTtl: this.timeout });
-    this.eventTimeout = this.opts.eventTimeout || (60 * 1000);
+    this.eventTimeout = this.opts.eventTimeout || (120 * 1000);
     this.eventCache = new Cache({ defaultTtl: this.eventTimeout });
     this.awaitTimeout = this.opts.awaitTimeout || (3 * 1000);
     this.processor = new MessageProcessor({ awaitTimeout: this.awaitTimeout });
