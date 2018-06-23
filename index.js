@@ -253,7 +253,7 @@ const notify = function (event) {
     // There are no subscribers for the given `resource`.
     return (Promise.resolve());
   }
-  // If the given event needs to be ordered we increment its sequence number.
+  // If the given `event` needs to be ordered we increment its sequence number.
   if (event.opts.ordered) {
     event.headers.sequence = subscribers.sequence++;
   }
