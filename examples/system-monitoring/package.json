@@ -28,7 +28,7 @@
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
     "expressify-js": "^2.0.0",
-    "moment": "^2.22.1",
+    "moment": "^2.29.2",
     "pretty-bytes": "^4.0.2",
     "systeminformation": "^3.40.0"
   }
