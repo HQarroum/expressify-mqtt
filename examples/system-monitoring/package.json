@@ -24,7 +24,7 @@
   "author": "Halim Qarroum <hqm.post@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "aws-iot-device-sdk": "^2.2.1",
+    "aws-iot-device-sdk": "^2.2.12",
     "chalk": "^2.4.1",
     "commander": "^2.15.1",
     "expressify-js": "^2.0.0",
